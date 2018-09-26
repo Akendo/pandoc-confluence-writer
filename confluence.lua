@@ -143,12 +143,17 @@ function Strikeout(s)
   return '<span style="text-decoration: line-through;">' .. s .. '</span>'
 end
 
+-- This function is for generating the link. There is currently a bug that a markdown link will not be 
+-- cleanly generated. Some of the values are duplicated and fuck up the text.
+
+-- My understanding is that the code will be invoke by pandoc, that detects a Link type of token to use this
+
 function Link(s, src, tit, attr)
   if src and string.sub(src, 1, 1) == "#" then
     -- [Anchor Link](#anchor), taken from https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html#ConfluenceStorageFormat-Links
     return LinkToAnchor(escape(string.sub(src, 2, -1), true), s)
   else
-    return string.sub(src, 0, 1) .. src .. "<a href='" .. escape(src,true) .. "' title='" ..
+    return src .. "<a href='" .. escape(src,true) .. "' title='" ..
            escape(tit,true) .. "'>" .. s .. "</a>"
   end
 end
