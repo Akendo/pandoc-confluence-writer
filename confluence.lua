@@ -71,21 +71,14 @@ end
 -- fill variables in a custom lua template.  Or, pass `--template=...`
 -- to pandoc, and pandoc will add do the template processing as
 -- usual.
+
+-- It is 
 function Doc(body, metadata, variables)
   local buffer = {}
   local function add(s)
     table.insert(buffer, s)
   end
-  local css_style = [[
-<ac:structured-macro ac:macro-id="b7c0ac99-8feb-49c2-858c-870cd55df16b" ac:name="html" ac:schema-version="1">'
-    <ac:parameter ac:name="atlassian-macro-output-type">INLINE</ac:parameter>
-    <ac:plain-text-body>
-    <![CDATA[
- <style>
-#captioned-image {
-    text-align: center;
-}]] ..
-    "</style>]]></ac:plain-text-body></ac:structured-macro>"
+  local css_style = [[]]
   add(css_style)
   add(body)
   if #notes > 0 then
@@ -149,11 +142,12 @@ end
 -- My understanding is that the code will be invoke by pandoc, that detects a Link type of token to use this
 
 function Link(s, src, tit, attr)
+    -- print ("Links is invoked")
   if src and string.sub(src, 1, 1) == "#" then
     -- [Anchor Link](#anchor), taken from https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html#ConfluenceStorageFormat-Links
     return LinkToAnchor(escape(string.sub(src, 2, -1), true), s)
   else
-    return src .. "<a href='" .. escape(src,true) .. "' title='" ..
+    return "<a href='" .. escape(src,true) .. "' title='" ..
            escape(tit,true) .. "'>" .. s .. "</a>"
   end
 end
@@ -164,6 +158,7 @@ function Image(s, src, tit, attr)
 end
 
 function Code(s, attr)
+  --print ("CodeBlock is invoked")
   return "<code" .. attributes(attr) .. ">" .. escape(s) .. "</code>"
 end
 
@@ -176,7 +171,11 @@ function DisplayMath(s)
 end
 
 function AnchorRef(anchorName)
-  return '<ac:structured-macro ac:name="anchor"><ac:parameter ac:name="">'.. anchorName .. '</ac:parameter></ac:structured-macro>'
+  -- print("Invke AnchorRef")
+  -- this function seems useles in the moment. It should create references but it is not complete... therefor we return nothing in the moment.
+  -- otherwise we have some unrelated text frames in the page.
+  -- return '<ac:structured-macro ac:name="anchor"><ac:parameter ac:name="">'.. anchorName .. '</ac:parameter></ac:structured-macro>'
+  return "" 
 end
 
 function LinkToAnchor(anchorName, text)
@@ -254,6 +253,7 @@ end
 function CodeBlock(s, attr)
   -- If code block has class 'dot', pipe the contents through dot
   -- and base64, and include the base64-encoded png as a data: URL.
+
   if attr.class and string.match(' ' .. attr.class .. ' ',' dot ') then
     local png = pipe("base64", pipe("dot -Tpng", s))
     return '<img src="data:image/png;base64,' .. png .. '"/>'
@@ -325,7 +325,10 @@ function CaptionedImage(src, tit, caption, attr)
 
    attr_cpy = table.shallow_copy(attr)
    attr_cpy['id'] = "captioned-image"
-   return Div('<table><tbody><tr><td><ac:image><ri:attachment ri:filename="' .. escape(src,true) .. '" /></ac:image></td></tr><tr><td>' .. escape(caption) .. '</td></tr></tbody></table>', attr_cpy)
+   -- here we do have an issue...maybe we can instead access the file and decode it as base64?
+   -- return Div('<table><tbody><tr><td><ac:image><ri:attachment ri:filename="' .. escape(src,true) .. '" /></ac:image></td></tr><tr><td>' .. escape(caption) .. '</td></tr></tbody></table>', attr_cpy)
+    -- return nothing instead?
+   return ""
 end
 
 -- Caption is a string, aligns is an array of strings,
@@ -382,6 +385,8 @@ function RawBlock(format, str)
   end
 end
 
+
+-- Why is there and hard coded marco id? 
 function Div(s, attr)
   local div_text = [[
 <ac:structured-macro ac:macro-id="57855606-2855-47df-ac05-f2cb358f1e23" ac:name="div" ac:schema-version="1">]]
